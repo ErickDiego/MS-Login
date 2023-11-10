@@ -18,19 +18,18 @@ public class UsuarioEntity {
     private String name;
     private String email;
     private String password;
-   // private ArrayList<PhoneEntity> phones;
+   private ArrayList<PhoneEntity> phones;
     private String dateCreation;
     private String lastLogin;
     private boolean isActive;
 
-    /**public ArrayList<PhoneEntity> getPhones() {
+   public ArrayList<PhoneEntity> getPhones() {
         return phones;
     }
 
     public void setPhones(ArrayList<PhoneEntity> phones) {
         this.phones = phones;
     }
-**/
     public String getId() {
         return id;
     }
