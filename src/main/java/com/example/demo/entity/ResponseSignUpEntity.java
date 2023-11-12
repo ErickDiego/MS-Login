@@ -9,7 +9,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ResponseUsuarioEntity {
+public class ResponseSignUpEntity {
     private String id;
     private String created;
     private String lastLogin;

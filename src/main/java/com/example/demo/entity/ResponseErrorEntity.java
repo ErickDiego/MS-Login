@@ -7,12 +7,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ErrorEntity {
+public class ResponseErrorEntity {
     private String timestamp;
     private int codigo;
     private String detail;
 
-    public ErrorEntity(String timestamp, int codigo, String detail) {
+    public ResponseErrorEntity(String timestamp, int codigo, String detail) {
         this.timestamp = timestamp;
         this.codigo = codigo;
         this.detail= detail;

@@ -1,11 +1,12 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.ErrorEntity;
-import com.example.demo.entity.ResponseUsuarioEntity;
+import com.example.demo.JWT.JwtGenerator;
+import com.example.demo.entity.ResponseErrorEntity;
+import com.example.demo.entity.RequestLoginEntity;
+import com.example.demo.entity.ResponseSignUpEntity;
 import com.example.demo.entity.UsuarioEntity;
 import com.example.demo.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +15,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Date;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/usuario")
@@ -34,14 +35,14 @@ public class UsuarioController {
     public ResponseEntity<?> createUser(@RequestBody UsuarioEntity usuarioEntity) throws NoSuchAlgorithmException {
         try {
             Date date = new Date();
-            String fechaActual = String.valueOf(date.getTime());
+            String fechaActual = LocalDate.now().toString();//String.valueOf(date.getTime());
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
             if (validacionPassword(usuarioEntity.getPassword())) {
                 System.out.println("contraseña Valida");
                 usuarioEntity.setPassword(encriptacionPassword(usuarioEntity.getPassword()));
             } else {
-                ErrorEntity error = new ErrorEntity(timestamp.toString(), 400, "Formato de contraseña invalida");
+                ResponseErrorEntity error = new ResponseErrorEntity(timestamp.toString(), 400, "Formato de contraseña invalida");
                 return new ResponseEntity<>(error, HttpStatus.BAD_GATEWAY) ;
             }
             usuarioEntity.setDateCreation(fechaActual);
@@ -52,7 +53,7 @@ public class UsuarioController {
             return new ResponseEntity<>(respuestaCorrecta(usuarioRepository.save(usuarioEntity)), HttpStatus.OK) ;
         } catch (Exception ex) {
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-            ErrorEntity error = new ErrorEntity(timestamp.toString(), 500, "Ha ocurrido un problema, inténtelo más tarde");
+            ResponseErrorEntity error = new ResponseErrorEntity(timestamp.toString(), 500, "Ha ocurrido un problema, inténtelo más tarde");
             return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -74,17 +75,40 @@ public class UsuarioController {
     }
 
     /**Se revcibe el registro que esta en la BD*/
-    private ResponseUsuarioEntity respuestaCorrecta(UsuarioEntity usuario){
-            ResponseUsuarioEntity responseUsuarioEntity = new ResponseUsuarioEntity() ;
+    private ResponseSignUpEntity respuestaCorrecta(UsuarioEntity usuario){
+            ResponseSignUpEntity responseUsuarioEntity = new ResponseSignUpEntity() ;
             responseUsuarioEntity.setId(usuario.getId());
             responseUsuarioEntity.setCreated(usuario.getDateCreation());
             responseUsuarioEntity.setLastLogin(usuario.getLastLogin());
-            responseUsuarioEntity.setToken("");
+            responseUsuarioEntity.setToken(JwtGenerator.generateToken(usuario));
             responseUsuarioEntity.setAcive(usuario.isActive());
 
-
             return  responseUsuarioEntity;
+    }
 
+    private boolean validarPassword(UsuarioEntity usuario){
+        try {
+
+            //if (usuario.getPassword()== usuarioRepository.findBy())
+
+            return true;
+        }catch (Exception ex){
+
+            return  false;
+        }
+    }
+
+    @RequestMapping("login")
+    public String login(@RequestBody RequestLoginEntity token){
+
+      String idUSer = JwtGenerator.verifyToken(token.getToken());
+
+
+      return  idUSer;
+       /** Optional<UsuarioEntity> usuario = Optional.of(new UsuarioEntity());
+        String iduser = "";
+        usuario = usuarioRepository.findById(iduser);
+        **/
     }
 
 }
