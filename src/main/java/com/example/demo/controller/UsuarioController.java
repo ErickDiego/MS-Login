@@ -1,11 +1,9 @@
 package com.example.demo.controller;
 
 import com.example.demo.JWT.JwtGenerator;
-import com.example.demo.entity.ResponseErrorEntity;
-import com.example.demo.entity.RequestLoginEntity;
-import com.example.demo.entity.ResponseSignUpEntity;
-import com.example.demo.entity.UsuarioEntity;
+import com.example.demo.entity.*;
 import com.example.demo.repository.UsuarioRepository;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,12 +16,14 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/usuario")
 public class UsuarioController {
     @Autowired
     private UsuarioRepository usuarioRepository;
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public String helloWorld() {
@@ -43,14 +43,13 @@ public class UsuarioController {
                 usuarioEntity.setPassword(encriptacionPassword(usuarioEntity.getPassword()));
             } else {
                 ResponseErrorEntity error = new ResponseErrorEntity(timestamp.toString(), 400, "Formato de contraseña invalida");
-                return new ResponseEntity<>(error, HttpStatus.BAD_GATEWAY) ;
+                return new ResponseEntity<>(error, HttpStatus.BAD_GATEWAY);
             }
             usuarioEntity.setDateCreation(fechaActual);
             usuarioEntity.setLastLogin(fechaActual);
             usuarioEntity.setActive(true);
-            //return new ResponseEntity<>(usuarioEntity, HttpStatus.OK) ;
 
-            return new ResponseEntity<>(respuestaCorrecta(usuarioRepository.save(usuarioEntity)), HttpStatus.OK) ;
+            return new ResponseEntity<>(respuestaCorrecta(usuarioRepository.save(usuarioEntity)), HttpStatus.OK);
         } catch (Exception ex) {
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             ResponseErrorEntity error = new ResponseErrorEntity(timestamp.toString(), 500, "Ha ocurrido un problema, inténtelo más tarde");
@@ -58,6 +57,28 @@ public class UsuarioController {
         }
     }
 
+    @RequestMapping("login")
+    public ResponseEntity<?> login(@RequestBody RequestLoginEntity token) {
+        String idUSer = JwtGenerator.verifyToken(token.getToken());
+
+        Optional.of(new UsuarioEntity());
+        Optional<UsuarioEntity> usuario;
+
+        usuario = usuarioRepository.findById(idUSer);
+
+        ResponseLoginEntity responseLoginEntity = new ResponseLoginEntity();
+        responseLoginEntity.setId(usuario.get().getId());
+        responseLoginEntity.setCreated(usuario.get().getDateCreation());
+        responseLoginEntity.setLastLogin(usuario.get().getLastLogin());
+        responseLoginEntity.setToken(JwtGenerator.generateToken(idUSer));
+        responseLoginEntity.setActive(usuario.get().isActive());
+        responseLoginEntity.setName(usuario.get().getName());
+        responseLoginEntity.setEmail(usuario.get().getEmail());
+        responseLoginEntity.setPassword(usuario.get().getPassword());
+        responseLoginEntity.setPhones(usuario.get().getPhones());
+
+        return new ResponseEntity<>(responseLoginEntity, HttpStatus.OK);
+    }
     /**
      * La clave debe seguir una expresión regular para validar que formato sea el correcto.
      * Debe tener solo una Mayúscula y solamente dos números (no necesariamente
@@ -74,41 +95,18 @@ public class UsuarioController {
         return passwordOutput;
     }
 
-    /**Se revcibe el registro que esta en la BD*/
-    private ResponseSignUpEntity respuestaCorrecta(UsuarioEntity usuario){
-            ResponseSignUpEntity responseUsuarioEntity = new ResponseSignUpEntity() ;
-            responseUsuarioEntity.setId(usuario.getId());
-            responseUsuarioEntity.setCreated(usuario.getDateCreation());
-            responseUsuarioEntity.setLastLogin(usuario.getLastLogin());
-            responseUsuarioEntity.setToken(JwtGenerator.generateToken(usuario));
-            responseUsuarioEntity.setAcive(usuario.isActive());
+    /**
+     * Se revcibe el registro que esta en la BD
+     */
+    private ResponseSignUpEntity respuestaCorrecta(UsuarioEntity usuario) {
+        ResponseSignUpEntity responseUsuarioEntity = new ResponseSignUpEntity();
+        responseUsuarioEntity.setId(usuario.getId());
+        responseUsuarioEntity.setCreated(usuario.getDateCreation());
+        responseUsuarioEntity.setLastLogin(usuario.getLastLogin());
+        responseUsuarioEntity.setToken(JwtGenerator.generateToken(usuario.getId()));
+        responseUsuarioEntity.setAcive(usuario.isActive());
 
-            return  responseUsuarioEntity;
-    }
-
-    private boolean validarPassword(UsuarioEntity usuario){
-        try {
-
-            //if (usuario.getPassword()== usuarioRepository.findBy())
-
-            return true;
-        }catch (Exception ex){
-
-            return  false;
-        }
-    }
-
-    @RequestMapping("login")
-    public String login(@RequestBody RequestLoginEntity token){
-
-      String idUSer = JwtGenerator.verifyToken(token.getToken());
-
-
-      return  idUSer;
-       /** Optional<UsuarioEntity> usuario = Optional.of(new UsuarioEntity());
-        String iduser = "";
-        usuario = usuarioRepository.findById(iduser);
-        **/
+        return responseUsuarioEntity;
     }
 
 }
