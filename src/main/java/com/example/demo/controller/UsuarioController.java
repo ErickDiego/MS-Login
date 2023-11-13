@@ -84,11 +84,11 @@ public class UsuarioController {
      * Debe tener solo una Mayúscula y solamente dos números (no necesariamente
      * consecutivos), en combinación de letras minúsculas, largo máximo de 12 y mínimo 8
      */
-    private boolean validacionPassword(String password) {
+    public boolean validacionPassword(String password) {
         return password.matches("^(?=.*[A-Z])(?=.*\\d.*\\d)[a-zA-Z\\d]{8,12}$");
     }
 
-    private String encriptacionPassword(String passwordInput) throws NoSuchAlgorithmException {
+    public String encriptacionPassword(String passwordInput) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hash = digest.digest(passwordInput.getBytes(StandardCharsets.UTF_8));
         String passwordOutput = Base64.getEncoder().encodeToString(hash);
